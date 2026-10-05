@@ -1,29 +1,21 @@
 package com.example.myapplication
 
-import android.app.DownloadManager
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import android.os.Environment
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.myapplication.presentation.MainViewModel
 import com.example.myapplication.ui.theme.MyApplicationTheme
-import java.io.File
-
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,57 +26,33 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Column {
+                    // Получаем ViewModel
+                    val viewModel: MainViewModel = viewModel()
+                    val statusText by viewModel.uiState.collectAsState()
+
+                    Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "Start",
-                            fontSize = 20.sp,
-                            modifier = Modifier.clickable { startService("Started") }
+                            text = "Статус: $statusText",
+                            fontSize = 18.sp,
+                            modifier = Modifier.padding(bottom = 20.dp)
                         )
-                        Spacer(modifier = Modifier.height(30.dp))
+
                         Text(
-                            text = "Stop",
+                            text = "1. Загрузить данные (Mock)",
                             fontSize = 20.sp,
-                            modifier = Modifier.clickable { stopService() }
+                            modifier = Modifier.clickable { viewModel.loadData() }
                         )
+
                         Spacer(modifier = Modifier.height(30.dp))
+
                         Text(
-                            text = "Download",
+                            text = "2. Запустить Worker",
                             fontSize = 20.sp,
-                            modifier = Modifier.clickable { download() }
+                            modifier = Modifier.clickable { viewModel.startWorker() }
                         )
                     }
                 }
             }
         }
     }
-
-    private fun download() {
-        val fileUrl = "http://speedtest.ftp.otenet.gr/files/test10Mb.db"
-        val fileName = "test10Mb.db"
-
-        val request = DownloadManager.Request(Uri.parse(fileUrl))
-            .setTitle(fileName)
-            .setDescription("Downloading")
-            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
-            .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
-
-        val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-        downloadManager.enqueue(request)
-    }
-
-    private fun startService(input: String) {
-        val myServiceIntent = Intent(this, MyForegroundService::class.java)
-        myServiceIntent.putExtra(Constants.inputExtra, input)
-        ContextCompat.startForegroundService(this, myServiceIntent)
-    }
-
-    public fun stopService() {
-        val serviceIntent = Intent(this, MyForegroundService::class.java)
-        stopService(serviceIntent)
-    }
-
-    @Composable
-    fun Test(name: String, modifier: Modifier = Modifier) {
-    }
-
 }

@@ -1,31 +1,40 @@
 package com.example.myapplication
 
 import android.content.Context
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+import kotlinx.coroutines.flow.MutableStateFlow
 
-class MyWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
-    override fun doWork(): Result {
-        try {
-            //Ваш код
-        } catch (ex: Exception) {
-            return Result.failure()
-        }
-        return Result.success()
-    }
+// Синглтон для обмена данными между Worker и ViewModel
+object WorkProgress {
+    val status = MutableStateFlow("Ожидание...")
 }
 
-fun start(context: Context) {
-    val myWorkRequest1 = OneTimeWorkRequestBuilder<MyWorker>().build()
-    val myWorkRequest2 = OneTimeWorkRequestBuilder<MyWorker>().build()
-    val myWorkRequest3 = OneTimeWorkRequestBuilder<MyWorker>().build()
+class MyWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
 
-    WorkManager.getInstance(context)
-        .beginWith(myWorkRequest1)
-        .then(myWorkRequest2)
-        .then(myWorkRequest3)
-        .enqueue()
+    override fun doWork(): Result {
+        return try {
+
+            WorkProgress.status.value = "Worker: Начало работы..."
+            Thread.sleep(2000)
+
+            WorkProgress.status.value = "Worker: Шаг 1 выполнен"
+            Thread.sleep(2000)
+
+            WorkProgress.status.value = "Worker: Шаг 2 выполнен"
+            Thread.sleep(2000)
+
+            WorkProgress.status.value = "Worker: Все задачи завершены!"
+            Result.success()
+        } catch (ex: Exception) {
+            WorkProgress.status.value = "Worker: Ошибка - ${ex.message}"
+            Result.failure()
+        }
+    }
+
+    companion object {
+        fun start(context: Context) {
+
+        }
+    }
 }
